@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Create a sandboxed iframe to display the content
             const iframe = document.createElement('iframe');
-            iframe.sandbox = 'allow-same-origin allow-scripts';
+            iframe.sandbox = 'allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox';
             contentDisplay.innerHTML = '';
             contentDisplay.appendChild(iframe);
             
@@ -57,6 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Adjust iframe height to match content
             iframe.onload = function() {
+                // Set initial height
                 iframe.style.height = iframeDocument.body.scrollHeight + 'px';
                 
                 // Make sure links open in a new tab
@@ -65,6 +66,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     link.target = '_blank';
                     link.rel = 'noopener noreferrer';
                 });
+
+                // Handle dynamic content changes
+                const resizeObserver = new ResizeObserver(entries => {
+                    for (let entry of entries) {
+                        iframe.style.height = entry.target.scrollHeight + 'px';
+                    }
+                });
+
+                resizeObserver.observe(iframeDocument.body);
             };
             
             // Show result container
