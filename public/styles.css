@@ -1,3 +1,10 @@
+.subtitle {
+    text-align: center;
+    color: #666;
+    margin-bottom: 20px;
+    font-size: 1.1em;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -26,7 +33,7 @@ header {
 
 h1 {
     color: #2c3e50;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     text-align: center;
 }
 

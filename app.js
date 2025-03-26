@@ -26,6 +26,15 @@ function replaceColorsInCSS(cssContent) {
     return cssContent;
 }
 
+// Function to replace Yale with Fale in text content
+function replaceYaleWithFale(text) {
+    if (!text) return text;
+    return text
+        .replace(/Yale/g, 'Fale')
+        .replace(/YALE/g, 'FALE')
+        .replace(/yale/g, 'fale');
+}
+
 // Route to serve the main page
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
@@ -99,11 +108,27 @@ app.post('/fetch', async (req, res) => {
         
         if ($el.is('img')) {
           $el.attr('src', proxyUrl);
+          // Also replace alt text if it contains Yale
+          const alt = $el.attr('alt');
+          if (alt) {
+            $el.attr('alt', replaceYaleWithFale(alt));
+          }
         } else if ($el.is('link')) {
           $el.attr('href', proxyUrl);
         } else if ($el.is('script')) {
           $el.attr('src', proxyUrl);
         }
+      }
+    });
+
+    // Process text nodes in the body
+    $('body *').contents().filter(function() {
+      return this.nodeType === 3; // Text nodes only
+    }).each(function() {
+      const text = $(this).text();
+      const newText = replaceYaleWithFale(text);
+      if (text !== newText) {
+        $(this).replaceWith(newText);
       }
     });
 
@@ -128,16 +153,43 @@ app.post('/fetch', async (req, res) => {
       }
     });
 
+    // Process meta tags
+    $('meta').each((i, el) => {
+      const $el = $(el);
+      const content = $el.attr('content');
+      if (content) {
+        $el.attr('content', replaceYaleWithFale(content));
+      }
+    });
+
     // Process title
-    const title = $('title').text();
+    const title = replaceYaleWithFale($('title').text());
+    $('title').text(title);
     
     // Add color replacement script to handle JavaScript-rendered styles
     const colorReplacementScript = `
       <script>
+        // Function to replace Yale with Fale in text
+        function replaceYaleWithFale(text) {
+          return text
+            .replace(/Yale/g, 'Fale')
+            .replace(/YALE/g, 'FALE')
+            .replace(/yale/g, 'fale');
+        }
+
         // Function to replace colors in computed styles
         function replaceComputedColors() {
           const elements = document.getElementsByTagName('*');
           for (let element of elements) {
+            // Replace text content if it contains Yale
+            if (element.childNodes && element.childNodes.length === 1 && element.childNodes[0].nodeType === 3) {
+              const text = element.textContent;
+              const newText = replaceYaleWithFale(text);
+              if (text !== newText) {
+                element.textContent = newText;
+              }
+            }
+
             const computedStyle = window.getComputedStyle(element);
             const color = computedStyle.color;
             const backgroundColor = computedStyle.backgroundColor;
@@ -175,23 +227,35 @@ app.post('/fetch', async (req, res) => {
           }
         }
 
+        // Function to handle dynamic content changes
+        function handleDynamicChanges(mutations) {
+          mutations.forEach(mutation => {
+            if (mutation.type === 'childList') {
+              mutation.addedNodes.forEach(node => {
+                if (node.nodeType === 3) { // Text node
+                  const text = node.textContent;
+                  const newText = replaceYaleWithFale(text);
+                  if (text !== newText) {
+                    node.textContent = newText;
+                  }
+                }
+              });
+            }
+          });
+          replaceComputedColors();
+        }
+
         // Run on page load
         replaceComputedColors();
 
         // Create observer to handle dynamically added elements
-        const observer = new MutationObserver((mutations) => {
-          mutations.forEach((mutation) => {
-            if (mutation.addedNodes.length) {
-              replaceComputedColors();
-            }
-          });
-        });
-
+        const observer = new MutationObserver(handleDynamicChanges);
         observer.observe(document.body, {
           childList: true,
           subtree: true,
           attributes: true,
-          attributeFilter: ['style', 'class']
+          attributeFilter: ['style', 'class'],
+          characterData: true
         });
 
         // Also run when dynamic styles might be added
