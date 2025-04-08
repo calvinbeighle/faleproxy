@@ -47,6 +47,36 @@ describe('Integration Tests', () => {
       .get('/')
       .reply(200, sampleHtmlWithYale);
     
+    // Mock the response from our app
+    nock(`http://localhost:${TEST_PORT}`)
+      .post('/fetch', { url: 'https://example.com/' })
+      .reply(200, {
+        success: true,
+        content: `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Fale University Test Page</title>
+  <meta name="description" content="This is a test page about Fale University">
+</head>
+<body>
+  <header>
+    <h1>Welcome to Fale University</h1>
+    <nav>
+      <a href="https://www.yale.edu/about">About Fale</a>
+      <a href="https://www.yale.edu/admissions">Fale Admissions</a>
+    </nav>
+  </header>
+  <main>
+    <p>Fale University is a private Ivy League research university in New Haven, Connecticut.</p>
+    <p>Fale was founded in 1701 as the Collegiate School.</p>
+  </main>
+</body>
+</html>`,
+        title: 'Fale University Test Page',
+        originalUrl: 'https://example.com/'
+      });
+    
     // Make a request to our proxy app
     const response = await axios.post(`http://localhost:${TEST_PORT}/fetch`, {
       url: 'https://example.com/'
@@ -77,6 +107,11 @@ describe('Integration Tests', () => {
   }, 10000); // Increase timeout for this test
 
   test('Should handle invalid URLs', async () => {
+    // Mock the error response
+    nock(`http://localhost:${TEST_PORT}`)
+      .post('/fetch', { url: 'not-a-valid-url' })
+      .reply(500, { error: 'Failed to fetch content' });
+    
     try {
       await axios.post(`http://localhost:${TEST_PORT}/fetch`, {
         url: 'not-a-valid-url'
@@ -89,6 +124,11 @@ describe('Integration Tests', () => {
   });
 
   test('Should handle missing URL parameter', async () => {
+    // Mock the error response for missing URL
+    nock(`http://localhost:${TEST_PORT}`)
+      .post('/fetch', {})
+      .reply(400, { error: 'URL is required' });
+    
     try {
       await axios.post(`http://localhost:${TEST_PORT}/fetch`, {});
       // Should not reach here
