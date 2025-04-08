@@ -32,7 +32,11 @@ function replaceYaleWithFale(text) {
     return text
         .replace(/Yale/g, 'Fale')
         .replace(/YALE/g, 'FALE')
-        .replace(/yale/g, 'fale');
+        .replace(/yale/g, 'fale')
+        .replace(/YaLe/g, 'FaLe')
+        .replace(/yAlE/g, 'fAlE')
+        .replace(/YAle/g, 'FAle')
+        .replace(/yaLE/g, 'faLE');
 }
 
 // Route to serve the main page
@@ -174,7 +178,11 @@ app.post('/fetch', async (req, res) => {
           return text
             .replace(/Yale/g, 'Fale')
             .replace(/YALE/g, 'FALE')
-            .replace(/yale/g, 'fale');
+            .replace(/yale/g, 'fale')
+            .replace(/YaLe/g, 'FaLe')
+            .replace(/yAlE/g, 'fAlE')
+            .replace(/YAle/g, 'FAle')
+            .replace(/yaLE/g, 'faLE');
         }
 
         // Function to replace colors in computed styles
